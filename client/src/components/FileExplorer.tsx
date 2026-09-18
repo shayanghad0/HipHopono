@@ -19,6 +19,8 @@ export function FileExplorer({ isOpen, onClose, onSelect }: FileExplorerProps) {
   const [error, setError] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [isGit, setIsGit] = useState<boolean | null>(null);
+  const [initingGit, setInitingGit] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -29,10 +31,13 @@ export function FileExplorer({ isOpen, onClose, onSelect }: FileExplorerProps) {
   const browse = async (path?: string) => {
     setLoading(true);
     setError('');
+    setIsGit(null);
     try {
       const data = await api.fs.browse(path || undefined);
       setCurrentPath(data.path);
       setDirectories(data.directories);
+      const gitCheck = await api.fs.gitCheck(data.path);
+      setIsGit(gitCheck.isGit);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -62,6 +67,19 @@ export function FileExplorer({ isOpen, onClose, onSelect }: FileExplorerProps) {
       await browse(currentPath);
     } catch (err) {
       setError((err as Error).message);
+    }
+  };
+
+  const initGit = async () => {
+    if (!currentPath) return;
+    setInitingGit(true);
+    try {
+      await api.fs.gitInit(currentPath);
+      setIsGit(true);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setInitingGit(false);
     }
   };
 
@@ -194,20 +212,41 @@ export function FileExplorer({ isOpen, onClose, onSelect }: FileExplorerProps) {
           )}
         </div>
 
-        <div className="px-4 py-3 border-t border-border flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-text-muted hover:text-text bg-bg-tertiary hover:bg-border rounded transition-colors text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => handleSelect(currentPath)}
-            disabled={loading || !currentPath}
-            className="px-4 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors disabled:opacity-50 text-sm"
-          >
-            Open This Folder
-          </button>
+        <div className="px-4 py-3 border-t border-border flex justify-between items-center">
+          <div>
+            {isGit === false && (
+              <button
+                onClick={initGit}
+                disabled={initingGit || loading}
+                className="px-3 py-1.5 text-text-muted hover:text-text bg-bg-tertiary hover:bg-border rounded transition-colors text-sm disabled:opacity-50"
+              >
+                {initingGit ? 'Initializing...' : 'Git Init'}
+              </button>
+            )}
+            {isGit === true && (
+              <span className="text-text-muted text-xs flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+                Git initialized
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-text-muted hover:text-text bg-bg-tertiary hover:bg-border rounded transition-colors text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleSelect(currentPath)}
+              disabled={loading || !currentPath}
+              className="px-4 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors disabled:opacity-50 text-sm"
+            >
+              Open This Folder
+            </button>
+          </div>
         </div>
       </div>
     </div>

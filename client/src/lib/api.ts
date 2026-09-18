@@ -67,6 +67,13 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ path }),
       }),
+    gitCheck: (path: string) =>
+      request<{ isGit: boolean }>(`/fs/git-check?path=${encodeURIComponent(path)}`),
+    gitInit: (path: string) =>
+      request<{ ok: boolean }>('/fs/git-init', {
+        method: 'POST',
+        body: JSON.stringify({ path }),
+      }),
   },
 
   project: {

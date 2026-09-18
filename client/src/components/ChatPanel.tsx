@@ -3,6 +3,7 @@ import { api } from '../lib/api.ts';
 import ToolCallBlock from './ToolCallBlock.tsx';
 import ApprovalModal from './ApprovalModal.tsx';
 import MarkdownRenderer from './MarkdownRenderer.tsx';
+import InteractiveNebulaShader from './ui/InteractiveNebulaShader.tsx';
 
 interface ChatPanelProps {
   conversationId: string;
@@ -314,9 +315,13 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
   };
 
   return (
-    <div className="h-full flex flex-col bg-bg font-mono">
+    <div className="h-full flex flex-col font-mono relative overflow-hidden bg-[#050a14]">
+      {/* Nebula background — chat area only (not side sections) */}
+      <InteractiveNebulaShader className="absolute inset-0" />
+      {/* Subtle veil for readability without hiding nebula */}
+      <div className="absolute inset-0 bg-[#0d1117]/35 pointer-events-none" aria-hidden />
       {/* Output area */}
-      <div ref={outputRef} className="flex-1 overflow-y-auto p-4 space-y-1">
+      <div ref={outputRef} className="relative z-10 flex-1 overflow-y-auto p-4 space-y-1">
         {showHelp && (
           <div className="mb-4 p-3 bg-bg-secondary border border-border rounded">
             <div className="text-accent font-bold mb-2">Available Commands:</div>
@@ -377,8 +382,8 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
         )}
       </div>
 
-      {/* Input area */}
-      <div className="border-t border-border bg-bg p-4">
+      {/* Input area — keep above nebula, semi-transparent with blur */}
+      <div className="relative z-10 border-t border-border bg-[#0d1117]/80 backdrop-blur-sm p-4">
         <div className="max-w-3xl mx-auto">
           <div className="rounded-xl border border-border bg-bg-secondary transition-colors focus-within:border-accent/60">
             <textarea

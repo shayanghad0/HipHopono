@@ -33,7 +33,7 @@ export const AGENT_TOOLS: LLMTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          path: { type: 'string', description: 'Absolute path to the file' },
+          path: { type: 'string', description: 'Path relative to project root (e.g. "src/main.py" or "README.md")' },
           offset: { type: 'number', description: 'Start line (0-indexed)' },
           limit: { type: 'number', description: 'Max lines to read' },
         },
@@ -49,7 +49,7 @@ export const AGENT_TOOLS: LLMTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          path: { type: 'string', description: 'Absolute path to the file' },
+          path: { type: 'string', description: 'Path relative to project root (e.g. "src/main.py")' },
           content: { type: 'string', description: 'Content to write' },
         },
         required: ['path', 'content'],
@@ -64,7 +64,7 @@ export const AGENT_TOOLS: LLMTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          path: { type: 'string', description: 'Absolute path for the new file' },
+          path: { type: 'string', description: 'Path relative to project root (e.g. "src/main.py")' },
           content: { type: 'string', description: 'File content' },
         },
         required: ['path', 'content'],
@@ -79,7 +79,7 @@ export const AGENT_TOOLS: LLMTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          path: { type: 'string', description: 'Absolute path to delete' },
+          path: { type: 'string', description: 'Path relative to project root' },
         },
         required: ['path'],
       },
@@ -93,8 +93,8 @@ export const AGENT_TOOLS: LLMTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          oldPath: { type: 'string', description: 'Current path' },
-          newPath: { type: 'string', description: 'New path' },
+          oldPath: { type: 'string', description: 'Current path relative to project root' },
+          newPath: { type: 'string', description: 'New path relative to project root' },
         },
         required: ['oldPath', 'newPath'],
       },
@@ -108,7 +108,7 @@ export const AGENT_TOOLS: LLMTool[] = [
       parameters: {
         type: 'object',
         properties: {
-          path: { type: 'string', description: 'Directory path' },
+          path: { type: 'string', description: 'Directory path relative to project root (empty for root)' },
         },
         required: ['path'],
       },
@@ -123,7 +123,7 @@ export const AGENT_TOOLS: LLMTool[] = [
         type: 'object',
         properties: {
           pattern: { type: 'string', description: 'Glob pattern' },
-          path: { type: 'string', description: 'Directory to search in' },
+          path: { type: 'string', description: 'Directory to search in (relative to project root)' },
         },
         required: ['pattern', 'path'],
       },
@@ -138,7 +138,7 @@ export const AGENT_TOOLS: LLMTool[] = [
         type: 'object',
         properties: {
           pattern: { type: 'string', description: 'Regex pattern' },
-          path: { type: 'string', description: 'Directory to search' },
+          path: { type: 'string', description: 'Directory to search (relative to project root)' },
         },
         required: ['pattern', 'path'],
       },

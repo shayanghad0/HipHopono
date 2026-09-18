@@ -108,4 +108,20 @@ router.get('/file', requireAuth, async (req, res) => {
   }
 });
 
+router.post('/mkdir', requireAuth, async (req, res) => {
+  try {
+    const { path: dirPath } = req.body as { path: string };
+    if (!dirPath) {
+      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Path is required' });
+      return;
+    }
+
+    const safe = await safePath(dirPath);
+    await fs.mkdir(safe, { recursive: true });
+    res.json({ ok: true, path: safe });
+  } catch (err) {
+    res.status(400).json({ error: 'MKDIR_ERROR', message: (err as Error).message });
+  }
+});
+
 export { router as fsRoutes };

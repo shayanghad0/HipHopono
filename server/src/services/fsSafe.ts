@@ -10,6 +10,22 @@ export class PathSecurityError extends Error {
   }
 }
 
+function isInside(childPath: string, parentPath: string): boolean {
+  const relative = path.relative(parentPath, childPath);
+  if (!relative) return true; // same path
+  // Outside if it escapes with .. or is an absolute path on another drive
+  if (relative === '..' || relative.startsWith(`..${path.sep}`)) return false;
+  if (path.isAbsolute(relative)) return false;
+  return true;
+}
+
+function isInsideInsensitive(childPath: string, parentPath: string): boolean {
+  if (process.platform === 'win32') {
+    return isInside(childPath.toLowerCase(), parentPath.toLowerCase());
+  }
+  return isInside(childPath, parentPath);
+}
+
 export async function safePath(inputPath: string, projectRoot?: string): Promise<string> {
   // Resolve relative paths against projectRoot if provided
   const resolved = path.isAbsolute(inputPath)
@@ -21,16 +37,16 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
     throw new PathSecurityError('Path contains null bytes');
   }
 
-  if (normalized.includes('..')) {
-    throw new PathSecurityError('Path traversal detected');
-  }
+  // NOTE: path.resolve() already collapses ".." segments, so checking
+  // includes('..') would false-positive on legit names like "my..folder".
+  // Traversal is enforced below via isInside() checks.
 
   let allowed = false;
 
   // Always allow paths within the project root
   if (projectRoot) {
     const projResolved = path.resolve(projectRoot);
-    if (normalized.startsWith(projResolved)) {
+    if (isInsideInsensitive(normalized, projResolved)) {
       allowed = true;
     }
   }
@@ -38,8 +54,9 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
   // Also check configured allowed roots
   if (!allowed) {
     for (const root of env.ALLOWED_ROOTS) {
+      if (!root) continue;
       const rootResolved = path.resolve(root);
-      if (normalized.startsWith(rootResolved)) {
+      if (isInsideInsensitive(normalized, rootResolved)) {
         allowed = true;
         break;
       }
@@ -52,7 +69,7 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
 
   if (projectRoot) {
     const projResolved = path.resolve(projectRoot);
-    if (!normalized.startsWith(projResolved)) {
+    if (!isInsideInsensitive(normalized, projResolved)) {
       throw new PathSecurityError('Path is outside project root');
     }
   }
@@ -66,14 +83,15 @@ export async function safePath(inputPath: string, projectRoot?: string): Promise
       // Always allow symlinks pointing within project root
       if (projectRoot) {
         const projResolved = path.resolve(projectRoot);
-        if (realNormalized.startsWith(projResolved)) {
+        if (isInsideInsensitive(realNormalized, projResolved)) {
           return realNormalized;
         }
       }
 
       for (const root of env.ALLOWED_ROOTS) {
+        if (!root) continue;
         const rootResolved = path.resolve(root);
-        if (realNormalized.startsWith(rootResolved)) {
+        if (isInsideInsensitive(realNormalized, rootResolved)) {
           return realNormalized;
         }
       }

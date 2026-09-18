@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 import { getDb, saveDb } from '../db/db.js';
 import { requireAuth, type AuthRequest } from '../middleware/auth.js';
 import { safePath } from '../services/fsSafe.js';
-import { isGitRepo, getGitBranch } from '../services/git.js';
+import { getGitBranch } from '../services/git.js';
 
 const router = Router();
 
@@ -30,14 +30,8 @@ router.post('/open', requireAuth, async (req: AuthRequest, res) => {
       return;
     }
 
-    const isGit = await isGitRepo(targetPath);
-    if (!isGit) {
-      res.status(400).json({
-        error: 'NOT_A_GIT_REPO',
-        message: 'This folder is not a git repository.',
-      });
-      return;
-    }
+    // Any folder can be opened as a project — git is optional.
+    // getGitBranch() returns 'unknown' for non-git folders.
 
     const blockedDirs = ['node_modules', '/proc', '/sys'];
     for (const blocked of blockedDirs) {

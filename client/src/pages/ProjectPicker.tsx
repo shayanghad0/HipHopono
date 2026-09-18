@@ -31,8 +31,30 @@ export default function ProjectPicker() {
   const [browseLoading, setBrowseLoading] = useState(false);
 
   useEffect(() => {
-    loadRecent();
+    loadRecentAndBrowse();
   }, []);
+
+  const loadRecentAndBrowse = async () => {
+    try {
+      const data = await api.project.recent();
+      setRecentProjects(data.projects);
+      if (data.projects.length > 0) {
+        const lastProject = data.projects[0];
+        setBrowsePath(lastProject.absPath);
+        await browse(lastProject.absPath);
+      } else {
+        // No recent project — start browsing from server home directory
+        await browse();
+      }
+    } catch {
+      // Fallback: still try to browse server home
+      try {
+        await browse();
+      } catch {
+        // Ignore
+      }
+    }
+  };
 
   const loadRecent = async () => {
     try {
@@ -171,19 +193,40 @@ export default function ProjectPicker() {
             >
               {browseLoading ? '...' : 'Browse'}
             </button>
+            <button
+              onClick={() => browsePath.trim() && openProject(browsePath.trim())}
+              disabled={loading || !browsePath.trim()}
+              title="Open current folder as project"
+              className="px-4 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Opening...' : 'Open current'}
+            </button>
           </div>
 
           {directories.length > 0 && (
             <div className="max-h-64 overflow-y-auto border border-border rounded bg-bg-secondary">
               {directories.map((dir) => (
-                <button
+                <div
                   key={dir.path}
-                  onClick={() => openProject(dir.path)}
-                  className="w-full text-left px-3 py-2 hover:bg-bg-tertiary text-text text-sm font-mono border-b border-border/50 last:border-0"
-                  disabled={loading}
+                  className="flex items-center gap-2 px-3 py-2 hover:bg-bg-tertiary border-b border-border/50 last:border-0"
                 >
-                  📁 {dir.name}
-                </button>
+                  <button
+                    onClick={() => browse(dir.path)}
+                    className="flex-1 text-left text-text text-sm font-mono"
+                    disabled={browseLoading}
+                    title="Browse into folder"
+                  >
+                    📁 {dir.name}
+                  </button>
+                  <button
+                    onClick={() => openProject(dir.path)}
+                    disabled={loading}
+                    title={`Open ${dir.name} as project`}
+                    className="px-2 py-1 text-xs bg-bg-tertiary hover:bg-accent hover:text-bg text-text-muted hover:text-bg rounded transition-colors disabled:opacity-50"
+                  >
+                    Open
+                  </button>
+                </div>
               ))}
             </div>
           )}

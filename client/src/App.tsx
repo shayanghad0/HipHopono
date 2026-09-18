@@ -6,6 +6,7 @@ import Login from './pages/Login.tsx';
 import Workspace from './pages/Workspace.tsx';
 import Settings from './pages/Settings.tsx';
 import ProjectPicker from './pages/ProjectPicker.tsx';
+import Assistant from './pages/Assistant.tsx';
 import { useAuth } from './context/AuthContext.tsx';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/assistant"
+        element={
+          <ProtectedRoute>
+            <Assistant />
           </ProtectedRoute>
         }
       />

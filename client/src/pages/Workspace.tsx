@@ -108,6 +108,13 @@ export default function Workspace() {
         <div className="flex items-center gap-3">
           <span className="text-text-muted text-xs">{user?.username}</span>
           <button
+            onClick={() => navigate('/assistant')}
+            className="px-2.5 py-1 rounded-full bg-accent/15 border border-accent/20 text-accent hover:bg-accent/20 text-xs font-medium transition-colors"
+            title="Task Assistant — chat to install programs, create files, etc."
+          >
+            Assistant
+          </button>
+          <button
             onClick={() => navigate('/setting')}
             className="text-text-muted hover:text-text text-xs"
           >

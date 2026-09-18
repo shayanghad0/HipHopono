@@ -155,12 +155,20 @@ export default function Settings() {
       <div className="max-w-3xl mx-auto p-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-text-bright">Settings</h1>
-          <button
-            onClick={() => navigate('/workspace')}
-            className="text-text-muted hover:text-text text-sm"
-          >
-            Back to workspace
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/assistant')}
+              className="px-3 py-1.5 rounded-full bg-accent/15 border border-accent/20 text-accent hover:bg-accent/20 text-xs font-medium transition-colors"
+            >
+              Assistant
+            </button>
+            <button
+              onClick={() => navigate('/workspace')}
+              className="text-text-muted hover:text-text text-sm"
+            >
+              Back to workspace
+            </button>
+          </div>
         </div>
 
         <div className="space-y-8">

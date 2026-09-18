@@ -114,6 +114,12 @@ export default function ProjectPicker() {
           <div className="flex items-center gap-4">
             <span className="text-text-muted text-sm">{user?.username}</span>
             <button
+              onClick={() => navigate('/assistant')}
+              className="px-3 py-1 rounded-full bg-accent/15 border border-accent/20 text-accent hover:bg-accent/20 text-xs font-medium transition-colors"
+            >
+              Assistant
+            </button>
+            <button
               onClick={() => navigate('/setting')}
               className="text-text-muted hover:text-text text-sm"
             >

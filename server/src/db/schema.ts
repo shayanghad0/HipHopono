@@ -70,6 +70,10 @@ export interface ToolCall {
   id: string;
   name: string;
   args: Record<string, unknown>;
+  status?: string;
+  output?: string;
+  diff?: import('../services/diff.js').FileDiff | null;
+  filePath?: string;
 }
 
 export interface AuditLogEntry {

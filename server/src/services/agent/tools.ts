@@ -4,6 +4,7 @@ import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { readFileSafe, writeFileSafe, deletePathSafe, renamePathSafe, listDirectory, safePath } from '../fsSafe.js';
 import { getGitStatus, getGitDiff, getGitLog, getGitBranch } from '../git.js';
+import { computeFileDiff, type FileDiff } from '../diff.js';
 import type { LLMTool } from '../llm/index.js';
 
 const execFileAsync = promisify(execFile) as (
@@ -201,6 +202,8 @@ export interface ToolResult {
   output: string;
   needsApproval?: boolean;
   approvalDetail?: string;
+  diff?: FileDiff | null;
+  filePath?: string;
 }
 
 export async function executeTool(
@@ -227,8 +230,24 @@ export async function executeTool(
       case 'create_file': {
         const filePath = args.path as string;
         const content = args.content as string;
+        let oldContent = '';
+        try {
+          oldContent = await readFileSafe(filePath, projectRoot);
+        } catch {
+          oldContent = '';
+        }
         await writeFileSafe(filePath, content, projectRoot);
-        return { ok: true, output: `File written: ${filePath}` };
+        const fileDiff = computeFileDiff(oldContent, content);
+        if (fileDiff) {
+          fileDiff.oldPath = filePath;
+          fileDiff.newPath = filePath;
+        }
+        return {
+          ok: true,
+          output: `File written: ${filePath}`,
+          diff: fileDiff,
+          filePath,
+        };
       }
 
       case 'delete_file': {

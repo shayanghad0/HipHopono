@@ -9,11 +9,25 @@ interface ChatPanelProps {
   projectId: string;
 }
 
+interface FileDiff {
+  oldPath: string;
+  newPath: string;
+  hunks: Array<{
+    oldStart: number;
+    oldCount: number;
+    newStart: number;
+    newCount: number;
+    lines: Array<{ type: 'common' | 'removed' | 'added'; content: string }>;
+  }>;
+  oldContent: string;
+  newContent: string;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant' | 'tool';
   content: string;
-  toolCalls?: Array<{ id: string; name: string; args: Record<string, unknown>; status?: string; output?: string }>;
+  toolCalls?: Array<{ id: string; name: string; args: Record<string, unknown>; status?: string; output?: string; diff?: FileDiff | null; filePath?: string }>;
   createdAt: string;
 }
 
@@ -31,6 +45,8 @@ interface ChatEvent {
   messageId?: string;
   kind?: string;
   detail?: string;
+  diff?: FileDiff | null;
+  filePath?: string;
 }
 
 interface ApprovalRequest {
@@ -54,12 +70,12 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
   const [isStreaming, setIsStreaming] = useState(false);
   const [approvalRequest, setApprovalRequest] = useState<ApprovalRequest | null>(null);
   const [streamingText, setStreamingText] = useState('');
-  const [streamingToolCalls, setStreamingToolCalls] = useState<Array<{ id: string; name: string; args: Record<string, unknown>; status?: string }>>([]);
+  const [streamingToolCalls, setStreamingToolCalls] = useState<Array<{ id: string; name: string; args: Record<string, unknown>; status?: string; output?: string; diff?: FileDiff | null; filePath?: string }>>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [showHelp, setShowHelp] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -73,6 +89,13 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  }, [input]);
 
   const loadMessages = async () => {
     try {
@@ -178,7 +201,7 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
       );
 
       let finalText = '';
-      const toolCalls: Array<{ id: string; name: string; args: Record<string, unknown>; status?: string; output?: string }> = [];
+      const toolCalls: Array<{ id: string; name: string; args: Record<string, unknown>; status?: string; output?: string; diff?: FileDiff | null; filePath?: string }> = [];
       let lastMessageId = '';
 
       for await (const event of stream) {
@@ -205,6 +228,8 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
             if (tcIndex >= 0) {
               toolCalls[tcIndex].status = e.ok ? 'done' : 'error';
               toolCalls[tcIndex].output = e.output || '';
+              toolCalls[tcIndex].diff = e.diff ?? null;
+              toolCalls[tcIndex].filePath = e.filePath;
               setStreamingToolCalls([...toolCalls]);
             }
             break;
@@ -353,36 +378,48 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
       </div>
 
       {/* Input area */}
-      <div className="border-t border-border p-3 bg-bg-secondary">
-        <div className="flex items-center gap-2">
-          <span className="text-accent font-bold">{'>'}</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a command or message..."
-            className="flex-1 bg-transparent text-text focus:outline-none text-sm font-mono placeholder-text-muted"
-            disabled={isStreaming}
-            autoFocus
-          />
-          {isStreaming ? (
-            <button
-              onClick={handleStop}
-              className="px-3 py-1 bg-danger/20 hover:bg-danger/30 text-danger rounded text-xs"
-            >
-              [stop]
-            </button>
-          ) : (
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim()}
-              className="px-3 py-1 bg-accent/20 hover:bg-accent/30 text-accent rounded text-xs disabled:opacity-30"
-            >
-              [send]
-            </button>
-          )}
+      <div className="border-t border-border bg-bg p-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="rounded-xl border border-border bg-bg-secondary transition-colors focus-within:border-accent/60">
+            <textarea
+              ref={inputRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Message..."
+              className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-text placeholder-text-muted focus:outline-none resize-none overflow-y-auto max-h-[160px] leading-relaxed"
+              disabled={isStreaming}
+              autoFocus
+            />
+            <div className="flex items-center justify-between px-3 pb-2.5 pt-1">
+              <span className="text-[11px] text-text-muted select-none">
+                Enter to send, Shift + Enter for new line
+              </span>
+              {isStreaming ? (
+                <button
+                  onClick={handleStop}
+                  aria-label="Stop"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-danger text-white transition-opacity hover:opacity-90"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                    <rect x="2" y="2" width="8" height="8" rx="1.5" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={sendMessage}
+                  disabled={!input.trim()}
+                  aria-label="Send"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-text-bright text-bg transition-opacity hover:opacity-90 disabled:opacity-20 disabled:cursor-not-allowed"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 14V2M2.5 7.5L8 2l5.5 5.5" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

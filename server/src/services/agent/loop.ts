@@ -18,6 +18,8 @@ export interface AgentEvent {
   messageId?: string;
   kind?: string;
   detail?: string;
+  diff?: import('../diff.js').FileDiff | null;
+  filePath?: string;
 }
 
 export interface ApprovalRequest {
@@ -53,6 +55,8 @@ export async function runAgentLoop(
 ): Promise<string> {
   const tools: LLMTool[] = [...AGENT_TOOLS];
   let iterations = 0;
+  const allToolCalls: Array<{ id: string; name: string; args: Record<string, unknown>; status?: string; output?: string; diff?: import('../diff.js').FileDiff | null; filePath?: string }> = [];
+  let accumulatedText = '';
 
   while (iterations < MAX_ITERATIONS) {
     if (abortSignal?.aborted) {
@@ -86,14 +90,23 @@ export async function runAgentLoop(
       abortSignal
     );
 
+    accumulatedText += finalText;
+
+    // record this iteration's tool calls
+    for (const tc of toolCalls) {
+      allToolCalls.push({ ...tc, status: 'running' });
+    }
+
     if (toolCalls.length === 0) {
-      if (finalText) {
-        const db = getDb();
-        const assistantMsg = {
-          id: uuid(),
+      const db = getDb();
+      const assistantId = uuid();
+      if (accumulatedText || allToolCalls.length > 0) {
+        const assistantMsg: any = {
+          id: assistantId,
           conversationId,
           role: 'assistant' as const,
-          content: finalText,
+          content: accumulatedText || (allToolCalls.length > 0 ? 'Updated files' : ''),
+          toolCalls: allToolCalls.length > 0 ? allToolCalls : undefined,
           tokensIn: 0,
           tokensOut: 0,
           createdAt: new Date().toISOString(),
@@ -103,8 +116,8 @@ export async function runAgentLoop(
         await saveDb(db);
       }
 
-      sendEvent({ type: 'done', messageId: uuid() });
-      return finalText;
+      sendEvent({ type: 'done', messageId: assistantId });
+      return accumulatedText;
     }
 
     messages.push({
@@ -170,11 +183,22 @@ export async function runAgentLoop(
 
       const result: ToolResult = await executeTool(tc.name, tc.args, projectRoot);
 
+      // update persisted tool call entry
+      const entry = allToolCalls.find(c => c.id === tc.id);
+      if (entry) {
+        entry.status = result.ok ? 'done' : 'error';
+        entry.output = result.output;
+        entry.diff = result.diff ?? null;
+        entry.filePath = result.filePath;
+      }
+
       sendEvent({
         type: 'tool_result',
         id: tc.id,
         ok: result.ok,
         output: result.output,
+        diff: result.diff ?? null,
+        filePath: result.filePath,
       });
 
       messages.push({

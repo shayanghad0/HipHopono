@@ -321,7 +321,7 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
       {/* Subtle veil for readability without hiding nebula */}
       <div className="absolute inset-0 bg-[#0d1117]/35 pointer-events-none" aria-hidden />
       {/* Output area */}
-      <div ref={outputRef} className="relative z-10 flex-1 overflow-y-auto p-4 space-y-1">
+      <div ref={outputRef} className="relative z-10 flex-1 overflow-y-auto p-4 space-y-3">
         {showHelp && (
           <div className="mb-4 p-3 bg-bg-secondary border border-border rounded">
             <div className="text-accent font-bold mb-2">Available Commands:</div>
@@ -340,9 +340,16 @@ export default function ChatPanel({ conversationId, projectId }: ChatPanelProps)
         {messages.map((msg) => (
           <div key={msg.id} className="text-sm">
             {msg.role === 'user' ? (
-              <div className="flex">
-                <span className="text-accent mr-2">{'>'}</span>
-                <span className="text-text-bright whitespace-pre-wrap">{msg.content}</span>
+              <div className="flex justify-end">
+                <div className="max-w-[78%] rounded-2xl border border-white/15 bg-[#161b22]/55 backdrop-blur-md px-4 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                  <div className="flex gap-2.5">
+                    <span className="text-accent select-none leading-relaxed">{'>'}</span>
+                    <span className="text-text-bright whitespace-pre-wrap leading-relaxed flex-1 break-words">{msg.content}</span>
+                  </div>
+                  <div className="text-[11px] text-text-muted/60 mt-2 text-right font-mono">
+                    {new Date(msg.createdAt).toLocaleTimeString()}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="ml-0">

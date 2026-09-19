@@ -1,11 +1,33 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSettings } from '../context/SettingsContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useToast } from '../components/ui/toast.tsx';
 import { BackgroundPaths } from '../components/ui/background-paths.tsx';
 import { api } from '../lib/api.ts';
+import {
+  Settings as SettingsIcon,
+  Bot,
+  Shield,
+  User,
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Key,
+  Globe,
+  Zap,
+  Terminal,
+  FileText,
+  Clock,
+  Eye,
+  EyeOff,
+  LogOut,
+  RotateCcw,
+} from 'lucide-react';
+
+type Tab = 'model' | 'agent' | 'account';
 
 export default function Settings() {
   const { settings, updateSettings, refreshSettings } = useSettings();
@@ -13,11 +35,13 @@ export default function Settings() {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
+  const [activeTab, setActiveTab] = useState<Tab>('model');
   const [providerLabel, setProviderLabel] = useState('');
   const [modelName, setModelName] = useState('');
   const [apiBaseUrl, setApiBaseUrl] = useState('');
   const [apiFormat, setApiFormat] = useState<'openai' | 'anthropic' | 'other'>('openai');
   const [apiToken, setApiToken] = useState('');
+  const [showToken, setShowToken] = useState(false);
   const [temperature, setTemperature] = useState(0.2);
   const [maxTokens, setMaxTokens] = useState(8192);
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -27,26 +51,9 @@ export default function Settings() {
   const [commandTimeoutMs, setCommandTimeoutMs] = useState(30000);
   const [useQueryAuth, setUseQueryAuth] = useState(false);
 
-  // Sync state when settings load from server
-  useEffect(() => {
-    if (settings) {
-      setProviderLabel(settings.providerLabel || '');
-      setModelName(settings.modelName || '');
-      setApiBaseUrl(settings.apiBaseUrl || '');
-      setApiFormat(settings.apiFormat || 'openai');
-      setTemperature(settings.temperature || 0.2);
-      setMaxTokens(settings.maxTokens || 8192);
-      setSystemPrompt(settings.systemPrompt || '');
-      setAutoApproveReads(settings.autoApproveReads ?? true);
-      setAutoApproveWrites(settings.autoApproveWrites ?? false);
-      setAutoApproveCommands(settings.autoApproveCommands ?? false);
-      setCommandTimeoutMs(settings.commandTimeoutMs || 30000);
-      setUseQueryAuth(settings.customHeaders?.['X-Auth-As-Query'] === 'true');
-    }
-  }, [settings]);
-
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -54,6 +61,23 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [resetting, setResetting] = useState(false);
+
+  useEffect(() => {
+    if (settings) {
+      setProviderLabel(settings.providerLabel || '');
+      setModelName(settings.modelName || '');
+      setApiBaseUrl(settings.apiBaseUrl || '');
+      setApiFormat(settings.apiFormat || 'openai');
+      setTemperature(settings.temperature ?? 0.2);
+      setMaxTokens(settings.maxTokens ?? 8192);
+      setSystemPrompt(settings.systemPrompt || '');
+      setAutoApproveReads(settings.autoApproveReads ?? true);
+      setAutoApproveWrites(settings.autoApproveWrites ?? false);
+      setAutoApproveCommands(settings.autoApproveCommands ?? false);
+      setCommandTimeoutMs(settings.commandTimeoutMs ?? 30000);
+      setUseQueryAuth(settings.customHeaders?.['X-Auth-As-Query'] === 'true');
+    }
+  }, [settings]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -92,7 +116,6 @@ export default function Settings() {
     setTesting(true);
     setTestResult(null);
     try {
-      // Save all current form values first, then test
       await updateSettings({
         providerLabel,
         modelName,
@@ -158,306 +181,511 @@ export default function Settings() {
       setTimeout(() => {
         window.location.href = '/login';
       }, 2000);
+    } finally {
+      setResetting(false);
     }
   };
 
+  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: 'model', label: 'Model & API', icon: <Bot className="w-4 h-4" /> },
+    { id: 'agent', label: 'Agent Behavior', icon: <Terminal className="w-4 h-4" /> },
+    { id: 'account', label: 'Account', icon: <User className="w-4 h-4" /> },
+  ];
+
+  const inputBase = 'w-full px-3 py-2 bg-bg-secondary border border-border rounded-lg text-text focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 text-sm transition-all duration-150';
+  const labelBase = 'block text-sm text-text-muted mb-1.5 font-medium';
+  const fieldGroup = 'space-y-3';
+
   return (
     <motion.div
-      className="min-h-screen bg-bg"
+      className="relative min-h-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
       <BackgroundPaths />
-      <div className="relative z-10 max-w-3xl mx-auto p-8">
+      <div className="relative z-10 max-w-5xl mx-auto p-6 lg:p-8">
+        {/* Header */}
         <motion.div
           className="flex items-center justify-between mb-8"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
         >
-          <motion.h1
-            className="text-2xl font-bold text-text-bright"
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
-          >
-            Settings
-          </motion.h1>
-          <motion.button
-            onClick={() => navigate('/workspace')}
-            className="text-text-muted hover:text-text text-sm"
-            whileHover={{ scale: 1.05, x: -3 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Back to workspace
-          </motion.button>
-        </motion.div>
-
-        <motion.div
-          className="space-y-8"
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <motion.section
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.25 }}
-          >
-            <h2 className="text-lg font-medium text-text mb-4">Model / Provider</h2>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-text-muted mb-1">Provider Label</label>
-                  <input
-                    type="text"
-                    value={providerLabel}
-                    onChange={(e) => setProviderLabel(e.target.value)}
-                    placeholder="OpenAI"
-                    className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-text-muted mb-1">API Format</label>
-                  <select
-                    value={apiFormat}
-                    onChange={(e) => setApiFormat(e.target.value as 'openai' | 'anthropic' | 'other')}
-                    className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm"
-                  >
-                    <option value="openai">OpenAI Compatible</option>
-                    <option value="anthropic">Anthropic</option>
-                    <option value="other">Other (Custom)</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm text-text-muted mb-1">Model Name</label>
-                <input
-                  type="text"
-                  value={modelName}
-                  onChange={(e) => setModelName(e.target.value)}
-                  placeholder="gpt-4o"
-                  className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-text-muted mb-1">API Base URL</label>
-                <input
-                  type="text"
-                  value={apiBaseUrl}
-                  onChange={(e) => setApiBaseUrl(e.target.value)}
-                  placeholder="https://api.openai.com/v1"
-                  className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm font-mono"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-text-muted mb-1">
-                  API Token
-                  {settings?.apiTokenSet && (
-                    <span className="ml-2 text-success text-xs">
-                      (Set: {settings.apiTokenPreview})
-                    </span>
-                  )}
-                </label>
-                <input
-                  type="password"
-                  value={apiToken}
-                  onChange={(e) => setApiToken(e.target.value)}
-                  placeholder={settings?.apiTokenSet ? 'Enter new token to replace...' : 'Enter API token...'}
-                  className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm font-mono"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="useQueryAuth"
-                  checked={useQueryAuth}
-                  onChange={(e) => setUseQueryAuth(e.target.checked)}
-                  className="rounded"
-                />
-                <label htmlFor="useQueryAuth" className="text-sm text-text-muted">
-                  Send API key as query parameter (?api_key=...) instead of Authorization header
-                </label>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-text-muted mb-1">
-                    Temperature: {temperature}
-                  </label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={temperature}
-                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-text-muted mb-1">Max Tokens</label>
-                  <input
-                    type="number"
-                    value={maxTokens}
-                    onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                    className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm"
-                  />
-                </div>
-              </div>
-              <button
-                onClick={handleTestConnection}
-                disabled={testing}
-                className="px-4 py-2 bg-bg-tertiary hover:bg-border text-text rounded transition-colors text-sm disabled:opacity-50"
-              >
-                {testing ? 'Testing...' : 'Test Connection'}
-              </button>
-              {testResult && (
-                <div className={`text-sm ${testResult.ok ? 'text-success' : 'text-danger'}`}>
-                  {testResult.ok ? 'Connection successful!' : `Failed: ${testResult.error}`}
-                </div>
-              )}
-            </div>
-          </motion.section>
-
-          <motion.section
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.35 }}
-          >
-            <h2 className="text-lg font-medium text-text mb-4">Agent Behavior</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm text-text-muted mb-1">System Prompt</label>
-                <textarea
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm font-mono resize-y"
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <label className="flex items-center gap-2 text-sm text-text">
-                  <input
-                    type="checkbox"
-                    checked={autoApproveReads}
-                    onChange={(e) => setAutoApproveReads(e.target.checked)}
-                    className="rounded"
-                  />
-                  Auto-approve reads
-                </label>
-                <label className="flex items-center gap-2 text-sm text-text">
-                  <input
-                    type="checkbox"
-                    checked={autoApproveWrites}
-                    onChange={(e) => setAutoApproveWrites(e.target.checked)}
-                    className="rounded"
-                  />
-                  Auto-approve writes
-                </label>
-                <label className="flex items-center gap-2 text-sm text-text">
-                  <input
-                    type="checkbox"
-                    checked={autoApproveCommands}
-                    onChange={(e) => setAutoApproveCommands(e.target.checked)}
-                    className="rounded"
-                  />
-                  Auto-approve commands
-                </label>
-              </div>
-              <div>
-                <label className="block text-sm text-text-muted mb-1">Command Timeout (ms)</label>
-                <input
-                  type="number"
-                  value={commandTimeoutMs}
-                  onChange={(e) => setCommandTimeoutMs(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm"
-                />
-              </div>
-            </div>
-          </motion.section>
-
-          <motion.section
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.45 }}
-          >
-            <h2 className="text-lg font-medium text-text mb-4">Account</h2>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm text-text-muted mb-1">Current Password</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-text-muted mb-1">New Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-bg-secondary border border-border rounded text-text focus:outline-none focus:border-accent text-sm"
-                  />
-                </div>
-              </div>
-              <button
-                onClick={handleChangePassword}
-                disabled={!currentPassword || !newPassword}
-                className="px-4 py-2 bg-bg-tertiary hover:bg-border text-text rounded transition-colors text-sm disabled:opacity-50"
-              >
-                Change Password
-              </button>
-            </div>
-          </motion.section>
-
-          <motion.div
-            className="flex gap-3"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.55 }}
-          >
+          <div className="flex items-center gap-4">
             <motion.button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-6 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors disabled:opacity-50"
-              whileHover={{ scale: !saving ? 1.03 : 1, boxShadow: !saving ? '0 0 15px rgba(88,166,255,0.3)' : 'none' }}
-              whileTap={{ scale: !saving ? 0.97 : 1 }}
+              onClick={() => navigate('/workspace')}
+              className="flex items-center gap-1.5 text-text-muted hover:text-text text-sm transition-colors"
+              whileHover={{ x: -3 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
+              <ArrowLeft className="w-4 h-4" />
+              Back to workspace
             </motion.button>
-            <motion.button
-              onClick={handleReset}
-              disabled={resetting}
-              className="px-6 py-2 bg-danger/20 hover:bg-danger/30 text-danger rounded transition-colors text-sm disabled:opacity-50"
-              whileHover={{ scale: !resetting ? 1.03 : 1, backgroundColor: 'rgba(248,81,73,0.3)' }}
-              whileTap={{ scale: !resetting ? 0.97 : 1 }}
-            >
-              {resetting ? 'Resetting...' : 'Reset Full'}
-            </motion.button>
-            <motion.button
-              onClick={handleLogout}
-              className="px-6 py-2 bg-bg-tertiary hover:bg-border text-text rounded transition-colors text-sm"
-              whileHover={{ scale: 1.03, backgroundColor: '#484f58' }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Logout
-            </motion.button>
-          </motion.div>
-
-          {error && (
-            <motion.div
-              className="text-danger text-sm"
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              {error}
-            </motion.div>
+            <div className="h-5 w-px bg-border" />
+            <h1 className="text-xl font-bold text-text-bright flex items-center gap-2">
+              <SettingsIcon className="w-5 h-5 text-accent" />
+              Settings
+            </h1>
+          </div>
+          {user && (
+            <div className="text-sm text-text-muted">
+              Logged in as <span className="text-text font-mono">{user.username}</span>
+            </div>
           )}
         </motion.div>
+
+        <div className="flex gap-6">
+          {/* Sidebar Tabs */}
+          <motion.nav
+            className="hidden md:flex flex-col gap-1 w-48 flex-shrink-0"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  activeTab === tab.id
+                    ? 'bg-accent/10 text-accent border border-accent/20'
+                    : 'text-text-muted hover:text-text hover:bg-bg-secondary border border-transparent'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </motion.nav>
+
+          {/* Mobile Tab Bar */}
+          <motion.div
+            className="md:hidden flex gap-2 w-full mb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+          >
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-accent/10 text-accent border border-accent/20'
+                    : 'text-text-muted hover:text-text bg-bg-secondary border border-border'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </motion.div>
+
+          {/* Content Area */}
+          <div className="flex-1 min-w-0">
+            <AnimatePresence mode="wait">
+              {activeTab === 'model' && (
+                <motion.div
+                  key="model"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4"
+                >
+                  {/* Provider Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Globe className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">Provider</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelBase}>Provider Label</label>
+                        <input
+                          type="text"
+                          value={providerLabel}
+                          onChange={(e) => setProviderLabel(e.target.value)}
+                          placeholder="OpenAI"
+                          className={inputBase}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelBase}>API Format</label>
+                        <select
+                          value={apiFormat}
+                          onChange={(e) => setApiFormat(e.target.value as 'openai' | 'anthropic' | 'other')}
+                          className={inputBase}
+                        >
+                          <option value="openai">OpenAI Compatible</option>
+                          <option value="anthropic">Anthropic</option>
+                          <option value="other">Other (Custom)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className={labelBase}>Model Name</label>
+                      <input
+                        type="text"
+                        value={modelName}
+                        onChange={(e) => setModelName(e.target.value)}
+                        placeholder="gpt-4o"
+                        className={`${inputBase} font-mono`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={labelBase}>API Base URL</label>
+                      <input
+                        type="text"
+                        value={apiBaseUrl}
+                        onChange={(e) => setApiBaseUrl(e.target.value)}
+                        placeholder="https://api.openai.com/v1"
+                        className={`${inputBase} font-mono`}
+                      />
+                    </div>
+                  </section>
+
+                  {/* Token Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Key className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">Authentication</h2>
+                    </div>
+
+                    <div>
+                      <label className={labelBase}>
+                        API Token
+                        {settings?.apiTokenSet && (
+                          <span className="ml-2 inline-flex items-center gap-1 text-success text-xs bg-success/10 px-2 py-0.5 rounded-full">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {settings.apiTokenPreview}
+                          </span>
+                        )}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showToken ? 'text' : 'password'}
+                          value={apiToken}
+                          onChange={(e) => setApiToken(e.target.value)}
+                          placeholder={settings?.apiTokenSet ? 'Enter new token to replace...' : 'Enter API token...'}
+                          className={`${inputBase} pr-10 font-mono`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowToken(!showToken)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text p-1 rounded transition-colors"
+                        >
+                          {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <label className="flex items-start gap-2.5 cursor-pointer group">
+                      <div className="relative mt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={useQueryAuth}
+                          onChange={(e) => setUseQueryAuth(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-bg-tertiary border border-border rounded-full peer-checked:bg-accent/20 peer-checked:border-accent/50 transition-colors" />
+                        <div className="absolute inset-0.5 bg-text-muted rounded-full peer-checked:translate-x-4 peer-checked:bg-accent transition-transform" />
+                      </div>
+                      <div>
+                        <span className="text-sm text-text group-hover:text-text-bright transition-colors">
+                          Send API key as query parameter
+                        </span>
+                        <p className="text-xs text-text-muted mt-0.5">
+                          Use <code className="font-mono text-accent/80">?api_key=...</code> instead of Authorization header
+                        </p>
+                      </div>
+                    </label>
+                  </section>
+
+                  {/* Model Params Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Zap className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">Model Parameters</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className={labelBase}>Temperature</label>
+                          <span className="text-xs font-mono text-accent bg-accent/10 px-2 py-0.5 rounded">
+                            {temperature.toFixed(1)}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={temperature}
+                          onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                          className="w-full accent-accent"
+                        />
+                        <div className="flex justify-between text-xs text-text-muted">
+                          <span>Precise</span>
+                          <span>Creative</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className={labelBase}>Max Tokens</label>
+                        <input
+                          type="number"
+                          value={maxTokens}
+                          onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                          className={inputBase}
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Test Connection */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleTestConnection}
+                      disabled={testing}
+                      className="flex items-center gap-2 px-4 py-2 bg-bg-tertiary hover:bg-border text-text rounded-lg transition-all text-sm disabled:opacity-50"
+                    >
+                      {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                      {testing ? 'Testing...' : 'Test Connection'}
+                    </button>
+                    <AnimatePresence mode="wait">
+                      {testResult !== null && (
+                        <motion.div
+                          key={testResult.ok ? 'ok' : 'err'}
+                          initial={{ opacity: 0, x: -5 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 5 }}
+                          className={`flex items-center gap-1.5 text-sm ${testResult.ok ? 'text-success' : 'text-danger'}`}
+                        >
+                          {testResult.ok ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                          {testResult.ok ? 'Connected' : testResult.error}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'agent' && (
+                <motion.div
+                  key="agent"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4"
+                >
+                  {/* System Prompt Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">System Prompt</h2>
+                    </div>
+                    <textarea
+                      value={systemPrompt}
+                      onChange={(e) => setSystemPrompt(e.target.value)}
+                      rows={8}
+                      placeholder="You are a helpful coding assistant..."
+                      className={`${inputBase} font-mono text-xs resize-y min-h-[160px]`}
+                    />
+                    <div className="text-xs text-text-muted text-right">
+                      {systemPrompt.length} characters
+                    </div>
+                  </section>
+
+                  {/* Auto-approve Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Shield className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">Auto-approve Actions</h2>
+                    </div>
+
+                    {[
+                      { key: 'reads', label: 'Read operations', desc: 'Allow file reads without confirmation', checked: autoApproveReads, set: setAutoApproveReads },
+                      { key: 'writes', label: 'Write operations', desc: 'Allow file edits and creations without confirmation', checked: autoApproveWrites, set: setAutoApproveWrites },
+                      { key: 'commands', label: 'Terminal commands', desc: 'Run shell commands without confirmation', checked: autoApproveCommands, set: setAutoApproveCommands },
+                    ].map((item) => (
+                      <label key={item.key} className="flex items-center justify-between cursor-pointer group">
+                        <div className="flex-1">
+                          <div className="text-sm text-text group-hover:text-text-bright transition-colors font-medium">
+                            {item.label}
+                          </div>
+                          <div className="text-xs text-text-muted mt-0.5">{item.desc}</div>
+                        </div>
+                        <div className="relative ml-4 flex-shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={item.checked}
+                            onChange={(e) => item.set(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-bg-tertiary border border-border rounded-full peer-checked:bg-success/20 peer-checked:border-success/50 transition-colors" />
+                          <div className="absolute inset-0.5 bg-text-muted rounded-full peer-checked:translate-x-4 peer-checked:bg-success transition-transform" />
+                        </div>
+                      </label>
+                    ))}
+                  </section>
+
+                  {/* Timeout Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">Command Timeout</h2>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        value={commandTimeoutMs}
+                        onChange={(e) => setCommandTimeoutMs(parseInt(e.target.value))}
+                        className={`${inputBase} w-32 font-mono`}
+                      />
+                      <span className="text-sm text-text-muted">milliseconds</span>
+                    </div>
+                    <p className="text-xs text-text-muted">
+                      Max time to wait for a terminal command to complete before timing out.
+                    </p>
+                  </section>
+                </motion.div>
+              )}
+
+              {activeTab === 'account' && (
+                <motion.div
+                  key="account"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-4"
+                >
+                  {/* Change Password Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Shield className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">Change Password</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative">
+                        <label className={labelBase}>Current Password</label>
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          className={`${inputBase} pr-10`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-7 text-text-muted hover:text-text p-1 rounded transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <label className={labelBase}>New Password</label>
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className={`${inputBase} pr-10`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-7 text-text-muted hover:text-text p-1 rounded transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleChangePassword}
+                      disabled={!currentPassword || !newPassword}
+                      className="px-4 py-2 bg-bg-tertiary hover:bg-border text-text rounded-lg transition-all text-sm disabled:opacity-50"
+                    >
+                      Change Password
+                    </button>
+                  </section>
+
+                  {/* Danger Zone */}
+                  <section className="bg-danger/5 border border-danger/20 rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <RotateCcw className="w-4 h-4 text-danger" />
+                      <h2 className="text-sm font-semibold text-danger uppercase tracking-wide">Danger Zone</h2>
+                    </div>
+                    <p className="text-sm text-text-muted">
+                      Reset all data including chats, projects, settings, and credentials. A new admin account will be generated.
+                    </p>
+                    <button
+                      onClick={handleReset}
+                      disabled={resetting}
+                      className="flex items-center gap-2 px-4 py-2 bg-danger/15 hover:bg-danger/25 text-danger rounded-lg transition-all text-sm disabled:opacity-50 border border-danger/20"
+                    >
+                      {resetting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                      {resetting ? 'Resetting...' : 'Reset Everything'}
+                    </button>
+                  </section>
+
+                  {/* Logout */}
+                  <div className="flex items-center justify-between bg-bg-secondary border border-border rounded-xl p-5">
+                    <div>
+                      <div className="text-sm text-text font-medium">Sign Out</div>
+                      <div className="text-xs text-text-muted mt-0.5">Return to the project picker screen</div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-4 py-2 bg-bg-tertiary hover:bg-border text-text rounded-lg transition-all text-sm"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Save bar */}
+            {(activeTab === 'model' || activeTab === 'agent') && (
+              <motion.div
+                className="mt-4 flex items-center justify-end gap-3 pt-4 border-t border-border"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                {error && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="text-danger text-sm"
+                  >
+                    {error}
+                  </motion.span>
+                )}
+                <motion.button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-5 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded-lg transition-all text-sm disabled:opacity-50"
+                  whileHover={{ scale: !saving ? 1.02 : 1, boxShadow: !saving ? '0 0 20px rgba(88,166,255,0.3)' : 'none' }}
+                  whileTap={{ scale: !saving ? 0.98 : 1 }}
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <CheckCircle2 className="w-4 h-4" /> : null}
+                  {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
+                </motion.button>
+              </motion.div>
+            )}
+          </div>
+        </div>
       </div>
     </motion.div>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api.ts';
 
 interface DirEntry {
@@ -86,8 +87,21 @@ export function FileExplorer({ isOpen, onClose, onSelect }: FileExplorerProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-bg-primary border border-border rounded-lg shadow-2xl overflow-hidden">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div
+        className="w-full max-w-lg bg-bg-primary border border-border rounded-lg shadow-2xl overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25, duration: 0.25 }}
+      >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <h2 className="text-text font-medium">Open Project</h2>
           <button
@@ -182,35 +196,44 @@ export function FileExplorer({ isOpen, onClose, onSelect }: FileExplorerProps) {
           </div>
         )}
 
-        <div className="max-h-80 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-8 text-text-muted text-sm">
-              Loading...
-            </div>
-          ) : directories.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-text-muted text-sm">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mb-2 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
-              </svg>
-              No directories found
-            </div>
-          ) : (
-            <div className="py-1">
-              {directories.map((dir) => (
-                <button
-                  key={dir.path}
-                  onClick={() => browse(dir.path)}
-                  className="w-full text-left px-4 py-2.5 hover:bg-bg-tertiary text-text text-sm flex items-center gap-3 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-accent flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
-                  </svg>
-                  <span className="truncate">{dir.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPath}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+            className="max-h-80 overflow-y-auto"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center py-8 text-text-muted text-sm">
+                Loading...
+              </div>
+            ) : directories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-text-muted text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mb-2 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+                </svg>
+                No directories found
+              </div>
+            ) : (
+              <div className="py-1">
+                {directories.map((dir) => (
+                  <button
+                    key={dir.path}
+                    onClick={() => browse(dir.path)}
+                    className="w-full text-left px-4 py-2.5 hover:bg-bg-tertiary text-text text-sm flex items-center gap-3 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-accent flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+                    </svg>
+                    <span className="truncate">{dir.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
 
         <div className="px-4 py-3 border-t border-border flex justify-between items-center">
           <div>
@@ -248,7 +271,7 @@ export function FileExplorer({ isOpen, onClose, onSelect }: FileExplorerProps) {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

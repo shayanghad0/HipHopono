@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useSettings } from '../context/SettingsContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useToast } from '../components/ui/toast.tsx';
@@ -161,21 +162,49 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-bg">
+    <motion.div
+      className="min-h-screen bg-bg"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <BackgroundPaths />
       <div className="relative z-10 max-w-3xl mx-auto p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-text-bright">Settings</h1>
-          <button
+        <motion.div
+          className="flex items-center justify-between mb-8"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <motion.h1
+            className="text-2xl font-bold text-text-bright"
+            initial={{ x: -10, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+          >
+            Settings
+          </motion.h1>
+          <motion.button
             onClick={() => navigate('/workspace')}
             className="text-text-muted hover:text-text text-sm"
+            whileHover={{ scale: 1.05, x: -3 }}
+            whileTap={{ scale: 0.95 }}
           >
             Back to workspace
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        <div className="space-y-8">
-          <section>
+        <motion.div
+          className="space-y-8"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <motion.section
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
+          >
             <h2 className="text-lg font-medium text-text mb-4">Model / Provider</h2>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -289,9 +318,13 @@ export default function Settings() {
                 </div>
               )}
             </div>
-          </section>
+          </motion.section>
 
-          <section>
+          <motion.section
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.35 }}
+          >
             <h2 className="text-lg font-medium text-text mb-4">Agent Behavior</h2>
             <div className="space-y-3">
               <div>
@@ -342,9 +375,13 @@ export default function Settings() {
                 />
               </div>
             </div>
-          </section>
+          </motion.section>
 
-          <section>
+          <motion.section
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.45 }}
+          >
             <h2 className="text-lg font-medium text-text mb-4">Account</h2>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -375,34 +412,53 @@ export default function Settings() {
                 Change Password
               </button>
             </div>
-          </section>
+          </motion.section>
 
-          <div className="flex gap-3">
-            <button
+          <motion.div
+            className="flex gap-3"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.55 }}
+          >
+            <motion.button
               onClick={handleSave}
               disabled={saving}
               className="px-6 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors disabled:opacity-50"
+              whileHover={{ scale: !saving ? 1.03 : 1, boxShadow: !saving ? '0 0 15px rgba(88,166,255,0.3)' : 'none' }}
+              whileTap={{ scale: !saving ? 0.97 : 1 }}
             >
               {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={handleReset}
               disabled={resetting}
               className="px-6 py-2 bg-danger/20 hover:bg-danger/30 text-danger rounded transition-colors text-sm disabled:opacity-50"
+              whileHover={{ scale: !resetting ? 1.03 : 1, backgroundColor: 'rgba(248,81,73,0.3)' }}
+              whileTap={{ scale: !resetting ? 0.97 : 1 }}
             >
               {resetting ? 'Resetting...' : 'Reset Full'}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={handleLogout}
               className="px-6 py-2 bg-bg-tertiary hover:bg-border text-text rounded transition-colors text-sm"
+              whileHover={{ scale: 1.03, backgroundColor: '#484f58' }}
+              whileTap={{ scale: 0.97 }}
             >
               Logout
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
-          {error && <div className="text-danger text-sm">{error}</div>}
-        </div>
+          {error && (
+            <motion.div
+              className="text-danger text-sm"
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {error}
+            </motion.div>
+          )}
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

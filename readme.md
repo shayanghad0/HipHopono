@@ -2,7 +2,9 @@
 
 > A self-hosted, browser-based AI coding agent — like Claude Code, OpenCode CLI, Codex CLI, Zed AI, or Cursor Agent, but running entirely from your browser against your own machine.
 
+
 AI Web CLI lets you open any project folder on your server, chat with an LLM, and let the agent **read, edit, create, rename, and delete files** and **run terminal commands** — all with explicit user approval. No cloud lock-in. No `localStorage`. Everything persists to plain JSON files on disk.
+
 ---
 [نسخه فارسی](fa.readme.md)
 ## ✨ Features

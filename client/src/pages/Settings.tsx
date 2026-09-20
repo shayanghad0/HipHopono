@@ -238,13 +238,13 @@ export default function Settings() {
         >
           <div className="flex items-center gap-4">
             <motion.button
-              onClick={() => navigate('/workspace')}
+              onClick={() => navigate('/project')}
               className="flex items-center gap-1.5 text-text-muted hover:text-text text-sm transition-colors"
               whileHover={{ x: -3 }}
               whileTap={{ scale: 0.95 }}
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to workspace
+              Back to Home Page
             </motion.button>
             <div className="h-5 w-px bg-border" />
             <h1 className="text-xl font-bold text-text-bright flex items-center gap-2">

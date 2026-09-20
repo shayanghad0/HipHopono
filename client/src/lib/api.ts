@@ -67,6 +67,11 @@ export const api = {
       request<{ content: string; path: string }>(
         `/fs/file?projectId=${projectId}&path=${encodeURIComponent(path)}`
       ),
+    save: (projectId: string, path: string, content: string) =>
+      request<{ ok: boolean }>(`/fs/file`, {
+        method: 'POST',
+        body: JSON.stringify({ projectId, path, content }),
+      }),
     mkdir: (path: string) =>
       request<{ ok: boolean; path: string }>('/fs/mkdir', {
         method: 'POST',
@@ -79,6 +84,15 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ path }),
       }),
+    gitBranches: (projectId: string) =>
+      request<{ branches: string[]; current: string }>(
+        `/fs/git/branches?projectId=${projectId}`
+      ),
+    gitCheckout: (projectId: string, branch: string) =>
+      request<{ ok: boolean; branch: string }>(
+        '/fs/git/checkout',
+        { method: 'POST', body: JSON.stringify({ projectId, branch }) }
+      ),
   },
 
   project: {

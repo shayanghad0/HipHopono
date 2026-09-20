@@ -43,6 +43,8 @@ interface TreeNode {
 interface FileTreeProps {
   projectId: string;
   rootPath: string;
+  selectedFile?: string;
+  onSelectFile?: (path: string) => void;
 }
 
 function getFileIcon(fileName: string): { Icon: typeof File; color: string } {
@@ -212,11 +214,13 @@ function TreeItem({
   projectId,
   level,
   onSelect,
+  selectedFile,
 }: {
   node: TreeNode;
   projectId: string;
   level: number;
   onSelect: (path: string) => void;
+  selectedFile?: string;
 }) {
   const [expanded, setExpanded] = useState(level < 1);
   const isDir = node.type === 'directory';
@@ -255,8 +259,7 @@ function TreeItem({
             <fileInfo.Icon className={`w-4 h-4 ${fileInfo.color}`} />
           ) : null}
         </span>
-
-        <span className={`truncate ${isDir ? 'text-text font-[450]' : 'text-text-muted group-hover:text-text'}`}>
+        <span className={`truncate ${isDir ? 'text-text' : 'text-text-muted'} ${node.path === selectedFile ? 'bg-accent/20 text-accent' : ''}`}>
           {node.name}
         </span>
       </div>
@@ -274,6 +277,7 @@ function TreeItem({
               projectId={projectId}
               level={level + 1}
               onSelect={onSelect}
+              selectedFile={selectedFile}
             />
           ))}
         </div>
@@ -282,7 +286,7 @@ function TreeItem({
   );
 }
 
-export default function FileTree({ projectId, rootPath }: FileTreeProps) {
+export default function FileTree({ projectId, rootPath, selectedFile, onSelectFile }: FileTreeProps) {
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -305,8 +309,7 @@ export default function FileTree({ projectId, rootPath }: FileTreeProps) {
   };
 
   const handleSelect = (path: string) => {
-    // TODO: Open file in editor
-    console.log('Open file:', path);
+    onSelectFile?.(path);
   };
 
   if (loading) {
@@ -330,6 +333,7 @@ export default function FileTree({ projectId, rootPath }: FileTreeProps) {
           projectId={projectId}
           level={0}
           onSelect={handleSelect}
+          selectedFile={selectedFile}
         />
       ))}
     </div>

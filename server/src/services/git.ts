@@ -64,3 +64,30 @@ export async function isGitRepo(projectPath: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function getGitBranches(projectPath: string): Promise<string[]> {
+  try {
+    const { stdout } = await execFileAsync('git', ['branch', '--format=%(refname:short)'], {
+      cwd: projectPath,
+      timeout: 5000,
+    });
+    return stdout
+      .split('\n')
+      .map(b => b.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export async function checkoutGitBranch(projectPath: string, branch: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await execFileAsync('git', ['checkout', branch], {
+      cwd: projectPath,
+      timeout: 10000,
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}

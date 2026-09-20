@@ -7,6 +7,7 @@ import { api } from '../lib/api.ts';
 import Sidebar from '../components/Sidebar.tsx';
 import ChatPanel from '../components/ChatPanel.tsx';
 import FileTree from '../components/FileTree.tsx';
+import FileEditor from '../components/FileEditor.tsx';
 import Notifications from '../components/ui/notifications.tsx';
 
 export default function Workspace() {
@@ -20,6 +21,9 @@ export default function Workspace() {
   const [sidebarTab, setSidebarTab] = useState<'files' | 'conversations' | 'skills'>('files');
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [isResizing, setIsResizing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
+  const [branches, setBranches] = useState<{ branches: string[]; current: string }>({ branches: [], current: '' });
+  const [showBranchMenu, setShowBranchMenu] = useState(false);
 
   useEffect(() => {
     if (!project) {
@@ -28,6 +32,7 @@ export default function Workspace() {
     }
     loadConversations();
     loadSkills();
+    loadBranches();
   }, [project]);
 
   const loadConversations = async () => {
@@ -45,6 +50,27 @@ export default function Workspace() {
     try {
       const data = await api.skills.list(project.id);
       setSkills(data.skills);
+    } catch {
+      // Ignore
+    }
+  };
+
+  const loadBranches = async () => {
+    if (!project) return;
+    try {
+      const data = await api.fs.gitBranches(project.id);
+      setBranches(data);
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleSwitchBranch = async (branch: string) => {
+    if (!project) return;
+    try {
+      const data = await api.fs.gitCheckout(project.id, branch);
+      setBranches(prev => ({ ...prev, current: data.branch }));
+      setShowBranchMenu(false);
     } catch {
       // Ignore
     }
@@ -115,24 +141,53 @@ export default function Workspace() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
-        <motion.div
-          className="flex items-center gap-3"
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.25, delay: 0.05 }}
-        >
-          <span className="text-text-bright font-bold text-sm">HipHopono</span>
-          {project && (
-            <motion.span
-              className="text-text-muted text-xs font-mono"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.15 }}
-            >
-              {project.name} ({project.gitBranch})
-            </motion.span>
-          )}
-        </motion.div>
+          <motion.div
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25, delay: 0.05 }}
+          >
+            <span className="text-text-bright font-bold text-sm">HipHopono</span>
+            {project && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowBranchMenu(!showBranchMenu)}
+                  className="flex items-center gap-1.5 px-2 py-0.5 rounded hover:bg-bg-tertiary text-text-muted text-xs font-mono transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <circle cx="6" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.2" />
+                    <path d="M6 1v2M6 9v2M1 6h2M9 6h2M2.5 2.5l1.5 1.5M8 8l1.5 1.5M2.5 9.5l1.5-1.5M8 4l1.5-1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                  </svg>
+                  {project.gitBranch}
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path d="M2 3l2 2 2-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                {showBranchMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowBranchMenu(false)} />
+                    <div className="absolute top-full left-0 mt-1 w-48 bg-bg-secondary border border-border rounded-lg shadow-xl z-20 max-h-60 overflow-y-auto">
+                      <div className="p-1.5 text-xs text-text-muted font-medium border-b border-border">Branches</div>
+                      {branches.branches.map(branch => (
+                        <button
+                          key={branch}
+                          onClick={() => handleSwitchBranch(branch)}
+                          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-bg-tertiary flex items-center gap-2 ${branch === branches.current ? 'text-accent' : 'text-text'}`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60 shrink-0" />
+                          {branch}
+                          {branch === branches.current && <span className="ml-auto text-xs opacity-60">current</span>}
+                        </button>
+                      ))}
+                      {branches.branches.length === 0 && (
+                        <div className="px-3 py-2 text-xs text-text-muted">No branches found</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </motion.div>
         <motion.div
           className="flex items-center gap-3"
           initial={{ opacity: 0, x: 8 }}
@@ -197,12 +252,32 @@ export default function Workspace() {
             className="border-r border-border overflow-y-auto bg-bg-secondary"
             style={{ width: sidebarWidth }}
           >
-            <FileTree projectId={project.id} rootPath={project.absPath} />
+            <FileTree
+              projectId={project.id}
+              rootPath={project.absPath}
+              selectedFile={selectedFile || undefined}
+              onSelectFile={setSelectedFile}
+            />
           </div>
         )}
 
         <AnimatePresence mode="wait">
-          {activeConversation ? (
+          {selectedFile && project ? (
+            <motion.div
+              className="flex-1 overflow-hidden border-l border-border"
+              key="editor"
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FileEditor
+                projectId={project.id}
+                filePath={selectedFile}
+                onClose={() => setSelectedFile(null)}
+              />
+            </motion.div>
+          ) : activeConversation ? (
             <motion.div
               className="flex-1 overflow-hidden"
               key="chat"

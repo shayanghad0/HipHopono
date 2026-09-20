@@ -79,6 +79,15 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ path }),
       }),
+    gitBranches: (projectId: string) =>
+      request<{ branches: string[]; current: string }>(
+        `/fs/git/branches?projectId=${projectId}`
+      ),
+    gitCheckout: (projectId: string, branch: string) =>
+      request<{ ok: boolean; branch: string }>(
+        '/fs/git/checkout',
+        { method: 'POST', body: JSON.stringify({ projectId, branch }) }
+      ),
   },
 
   project: {

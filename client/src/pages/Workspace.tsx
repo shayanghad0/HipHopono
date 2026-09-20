@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../lib/api.ts';
 import Sidebar from '../components/Sidebar.tsx';
 import ChatPanel from '../components/ChatPanel.tsx';
+import FileTree from '../components/FileTree.tsx';
 import FileEditor from '../components/FileEditor.tsx';
 import Notifications from '../components/ui/notifications.tsx';
 
@@ -244,11 +245,21 @@ export default function Workspace() {
           onDeleteConversation={deleteConversation}
           skills={skills}
           onResizeStart={() => setIsResizing(true)}
-          projectId={project?.id}
-          rootPath={project?.absPath}
-          selectedFile={selectedFile || undefined}
-          onSelectFile={setSelectedFile}
         />
+
+        {sidebarTab === 'files' && project && (
+          <div
+            className="border-r border-border overflow-y-auto bg-bg-secondary"
+            style={{ width: sidebarWidth }}
+          >
+            <FileTree
+              projectId={project.id}
+              rootPath={project.absPath}
+              selectedFile={selectedFile || undefined}
+              onSelectFile={setSelectedFile}
+            />
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {selectedFile && project ? (

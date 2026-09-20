@@ -307,6 +307,17 @@ docker compose up -d
 
 ---
 
+## 🤝 Sponsor
+
+ارائهدهنده هوش مصنوعی کدنویسی ما **[NaraRouter](https://router.bynara.id/register?ref=SPB525NM)** است. با ثبت‌نام از لینک بالا به این مزایا دسترسی پیدا کنید:
+
+- **۷ میلیون توکن رایگان** برای شروع بلافاصله
+- **اعتبار ۱۰,۰۰۰ اید (IDR)** برای مدل‌های PAYG (پرداخت به‌ازای مصرف)
+
+![NaraRouter Sponsor](Assets/Card.png)
+
+---
+
 ## 📄 مجوز
 
 MIT — به `LICENSE` مراجعه کنید.
@@ -315,5 +326,5 @@ MIT — به `LICENSE` مراجعه کنید.
 
 ## 🙌 تقدیر و تشکر
 
-الهامگرفته از **Claude Code**، **OpenCode CLI**، **Codex CLI**، **Zed AI** و **Cursor Agent**.  
+الهامگرفته از **Claude Code**، **OpenCode CLI**، **ZAI** و **Nara Router**.  
 ساختهشده با ❤️ تنها با استفاده از Node.js، Express، TypeScript، React، Vite و فایلهای JSON ساده.

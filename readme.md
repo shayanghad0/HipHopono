@@ -306,6 +306,17 @@ Mount your project folder and the `database/` directory as volumes. See `docker-
 
 ---
 
+## 🤝 Sponsor
+
+Our coding AI provider is **[NaraRouter](https://router.bynara.id/register?ref=SPB525NM)**. Register with the link above to get:
+
+- **7M free tokens** to start building immediately
+- **10,000 IDR credit** for PAYG (pay-as-you-go) models
+
+![NaraRouter Sponsor](Assets/Card.png)
+
+---
+
 ## 📄 License
 
 MIT — see `LICENSE`.
@@ -314,5 +325,5 @@ MIT — see `LICENSE`.
 
 ## 🙌 Acknowledgements
 
-Inspired by **Claude Code**, **OpenCode CLI**, **Codex CLI**, **Zed AI**, and **Cursor Agent**.  
+Inspired by **Claude Code**, **OpenCode CLI**, **ZAI** and **Nara Router**.  
 Built with ❤️ using only Node.js, Express, TypeScript, React, Vite, and plain JSON files.

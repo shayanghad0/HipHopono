@@ -39,6 +39,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ currentPassword, newPassword }),
       }),
+    updateProfile: (username: string, displayName?: string) =>
+      request('/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ username, displayName }),
+      }),
   },
 
   settings: {
@@ -62,6 +67,18 @@ export const api = {
       request<{ content: string; path: string }>(
         `/fs/file?projectId=${projectId}&path=${encodeURIComponent(path)}`
       ),
+    mkdir: (path: string) =>
+      request<{ ok: boolean; path: string }>('/fs/mkdir', {
+        method: 'POST',
+        body: JSON.stringify({ path }),
+      }),
+    gitCheck: (path: string) =>
+      request<{ isGit: boolean }>(`/fs/git-check?path=${encodeURIComponent(path)}`),
+    gitInit: (path: string) =>
+      request<{ ok: boolean }>('/fs/git-init', {
+        method: 'POST',
+        body: JSON.stringify({ path }),
+      }),
   },
 
   project: {

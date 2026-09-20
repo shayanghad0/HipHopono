@@ -1,11 +1,14 @@
 import { Router } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { requireAuth } from '../middleware/auth.js';
 import { safePath, readFileSafe } from '../services/fsSafe.js';
 import { getDb } from '../db/db.js';
 import os from 'os';
 
+const execFileAsync = promisify(execFile);
 const router = Router();
 
 router.get('/browse', requireAuth, async (req, res) => {
@@ -105,6 +108,58 @@ router.get('/file', requireAuth, async (req, res) => {
     res.json({ content, path: filePath });
   } catch (err) {
     res.status(400).json({ error: 'READ_ERROR', message: (err as Error).message });
+  }
+});
+
+router.post('/mkdir', requireAuth, async (req, res) => {
+  try {
+    const { path: dirPath } = req.body as { path: string };
+    if (!dirPath) {
+      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Path is required' });
+      return;
+    }
+
+    const safe = await safePath(dirPath);
+    await fs.mkdir(safe, { recursive: true });
+    res.json({ ok: true, path: safe });
+  } catch (err) {
+    res.status(400).json({ error: 'MKDIR_ERROR', message: (err as Error).message });
+  }
+});
+
+router.get('/git-check', requireAuth, async (req, res) => {
+  try {
+    const dirPath = req.query.path as string;
+    if (!dirPath) {
+      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Path is required' });
+      return;
+    }
+
+    const safe = await safePath(dirPath);
+    try {
+      await fs.access(path.join(safe, '.git'));
+      res.json({ isGit: true });
+    } catch {
+      res.json({ isGit: false });
+    }
+  } catch (err) {
+    res.status(400).json({ error: 'CHECK_ERROR', message: (err as Error).message });
+  }
+});
+
+router.post('/git-init', requireAuth, async (req, res) => {
+  try {
+    const { path: dirPath } = req.body as { path: string };
+    if (!dirPath) {
+      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Path is required' });
+      return;
+    }
+
+    const safe = await safePath(dirPath);
+    await execFileAsync('git', ['init'], { cwd: safe });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: 'GIT_INIT_ERROR', message: (err as Error).message });
   }
 });
 

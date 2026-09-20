@@ -127,9 +127,49 @@ router.get('/me', requireAuth, (req: AuthRequest, res) => {
   res.json({
     id: user.id,
     username: user.username,
+    displayName: user.displayName,
     role: user.role,
     mustChangePassword: user.mustChangePassword,
   });
+});
+
+const updateProfileSchema = z.object({
+  username: z.string().min(1).optional(),
+  displayName: z.string().min(1).optional(),
+});
+
+router.patch('/profile', requireAuth, async (req: AuthRequest, res) => {
+  const parsed = updateProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'VALIDATION_ERROR', message: 'Invalid input' });
+    return;
+  }
+
+  const db = getDb();
+  const user = db.users.find(u => u.id === req.userId);
+  if (!user) {
+    res.status(404).json({ error: 'NOT_FOUND', message: 'User not found' });
+    return;
+  }
+
+  const { username, displayName } = parsed.data;
+
+  if (username !== undefined && username !== user.username) {
+    const alreadyTaken = db.users.some(u => u.username === username && u.id !== user.id);
+    if (alreadyTaken) {
+      res.status(409).json({ error: 'CONFLICT', message: 'Username already taken' });
+      return;
+    }
+    user.username = username;
+  }
+
+  if (displayName !== undefined) {
+    user.displayName = displayName;
+  }
+
+  await saveDb(db);
+
+  res.json({ ok: true });
 });
 
 export { router as authRoutes };

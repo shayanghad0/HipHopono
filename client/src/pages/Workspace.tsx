@@ -8,7 +8,6 @@ import Sidebar from '../components/Sidebar.tsx';
 import ChatPanel from '../components/ChatPanel.tsx';
 import FileTree from '../components/FileTree.tsx';
 import FileEditor from '../components/FileEditor.tsx';
-import Notifications from '../components/ui/notifications.tsx';
 
 export default function Workspace() {
   const { project, setProject } = useProject();
@@ -212,12 +211,7 @@ export default function Workspace() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.25, delay: 0.05 }}
         >
-          <Notifications
-            notifications={[
-              { id: 1, type: "success", message: "Server connected", timestamp: "Just now" },
-              { id: 2, type: "message", message: "Welcome to HipHopono", timestamp: "1m ago" },
-            ]}
-          />
+
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-xs font-bold shrink-0">
               {(user?.displayName || user?.username)?.[0]?.toUpperCase()}

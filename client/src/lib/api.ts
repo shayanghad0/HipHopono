@@ -67,6 +67,11 @@ export const api = {
       request<{ content: string; path: string }>(
         `/fs/file?projectId=${projectId}&path=${encodeURIComponent(path)}`
       ),
+    save: (projectId: string, path: string, content: string) =>
+      request<{ ok: boolean }>(`/fs/file`, {
+        method: 'POST',
+        body: JSON.stringify({ projectId, path, content }),
+      }),
     mkdir: (path: string) =>
       request<{ ok: boolean; path: string }>('/fs/mkdir', {
         method: 'POST',

@@ -4,7 +4,7 @@ import path from 'path';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { requireAuth } from '../middleware/auth.js';
-import { safePath, readFileSafe } from '../services/fsSafe.js';
+import { safePath, readFileSafe, writeFileSafe } from '../services/fsSafe.js';
 import { getDb } from '../db/db.js';
 import os from 'os';
 import { getGitBranch, getGitBranches, checkoutGitBranch } from '../services/git.js';
@@ -161,6 +161,28 @@ router.post('/git-init', requireAuth, async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     res.status(400).json({ error: 'GIT_INIT_ERROR', message: (err as Error).message });
+  }
+});
+
+router.post('/file', requireAuth, async (req, res) => {
+  try {
+    const { projectId, path: filePath, content } = req.body as { projectId?: string; path?: string; content?: string };
+    if (!projectId || !filePath || content === undefined) {
+      res.status(400).json({ error: 'VALIDATION_ERROR', message: 'projectId, path, and content are required' });
+      return;
+    }
+
+    const db = getDb();
+    const project = db.projects.find(p => p.id === projectId);
+    if (!project) {
+      res.status(404).json({ error: 'NOT_FOUND', message: 'Project not found' });
+      return;
+    }
+
+    await writeFileSafe(filePath, content, project.absPath);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'SAVE_ERROR', message: (err as Error).message });
   }
 });
 

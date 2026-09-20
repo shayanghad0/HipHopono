@@ -30,15 +30,6 @@ router.post('/open', requireAuth, async (req: AuthRequest, res) => {
       return;
     }
 
-    const isGit = await isGitRepo(targetPath);
-    if (!isGit) {
-      res.status(400).json({
-        error: 'NOT_A_GIT_REPO',
-        message: 'This folder is not a git repository.',
-      });
-      return;
-    }
-
     const blockedDirs = ['node_modules', '/proc', '/sys'];
     for (const blocked of blockedDirs) {
       if (targetPath.includes(blocked)) {
@@ -50,7 +41,8 @@ router.post('/open', requireAuth, async (req: AuthRequest, res) => {
       }
     }
 
-    const branch = await getGitBranch(targetPath);
+    const isGit = await isGitRepo(targetPath);
+    const branch = isGit ? await getGitBranch(targetPath) : 'no-git';
     const name = path.basename(targetPath);
 
     const db = getDb();

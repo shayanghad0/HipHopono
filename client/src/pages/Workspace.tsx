@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useProject } from '../context/ProjectContext.tsx';
 import { useAuth } from '../context/AuthContext.tsx';
 import { api } from '../lib/api.ts';
@@ -72,6 +73,12 @@ export default function Workspace() {
     }
   };
 
+  const handleTitleUpdate = (conversationId: string, title: string) => {
+    setConversations(prev =>
+      prev.map(c => c.id === conversationId ? { ...c, title } : c)
+    );
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -96,17 +103,42 @@ export default function Workspace() {
   }, [isResizing, handleSidebarResize]);
 
   return (
-    <div className="h-screen flex flex-col bg-bg">
-      <div className="h-10 flex items-center justify-between px-4 bg-bg-secondary border-b border-border">
-        <div className="flex items-center gap-3">
+    <motion.div
+      className="h-screen flex flex-col bg-bg"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+    >
+      <motion.div
+        className="h-10 flex items-center justify-between px-4 bg-bg-secondary border-b border-border"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <motion.div
+          className="flex items-center gap-3"
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.25, delay: 0.05 }}
+        >
           <span className="text-text-bright font-bold text-sm">HipHopono</span>
           {project && (
-            <span className="text-text-muted text-xs font-mono">
+            <motion.span
+              className="text-text-muted text-xs font-mono"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
               {project.name} ({project.gitBranch})
-            </span>
+            </motion.span>
           )}
-        </div>
-        <div className="flex items-center gap-3">
+        </motion.div>
+        <motion.div
+          className="flex items-center gap-3"
+          initial={{ opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.25, delay: 0.05 }}
+        >
           <Notifications
             notifications={[
               { id: 1, type: "success", message: "Server connected", timestamp: "Just now" },
@@ -114,28 +146,39 @@ export default function Workspace() {
             ]}
           />
           <span className="text-text-muted text-xs">{user?.username}</span>
-          <button
+          <motion.button
             onClick={() => navigate('/setting')}
             className="text-text-muted hover:text-text text-xs"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
           >
             Settings
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={() => navigate('/project')}
             className="text-text-muted hover:text-text text-xs"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
           >
             Projects
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={handleLogout}
             className="text-text-muted hover:text-danger text-xs"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
           >
             Logout
-          </button>
-        </div>
-      </div>
+          </motion.button>
+        </motion.div>
+      </motion.div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <motion.div
+        className="flex-1 flex overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
         <Sidebar
           width={sidebarWidth}
           activeTab={sidebarTab}
@@ -158,27 +201,53 @@ export default function Workspace() {
           </div>
         )}
 
-        <div className="flex-1 overflow-hidden">
+        <AnimatePresence mode="wait">
           {activeConversation ? (
-            <ChatPanel
-              conversationId={activeConversation}
-              projectId={project?.id || ''}
-            />
+            <motion.div
+              className="flex-1 overflow-hidden"
+              key="chat"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChatPanel
+                conversationId={activeConversation}
+                projectId={project?.id || ''}
+                onTitleUpdate={handleTitleUpdate}
+              />
+            </motion.div>
           ) : (
-            <div className="h-full flex items-center justify-center">
+            <motion.div
+              className="h-full flex items-center justify-center"
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
               <div className="text-center">
-                <p className="text-text-muted mb-4">No conversation selected</p>
-                <button
+                <motion.p
+                  className="text-text-muted mb-4"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  No conversation selected
+                </motion.p>
+                <motion.button
                   onClick={createConversation}
                   className="px-4 py-2 bg-accent hover:bg-accent-hover text-bg font-medium rounded transition-colors text-sm"
+                  whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(88,166,255,0.3)' }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   New Conversation
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
-      </div>
-    </div>
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
   );
 }

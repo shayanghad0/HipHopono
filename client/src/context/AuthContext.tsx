@@ -4,6 +4,7 @@ import { api } from '../lib/api.ts';
 interface User {
   id: string;
   username: string;
+  displayName?: string;
   role: string;
   mustChangePassword: boolean;
 }
@@ -14,6 +15,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  updateProfile: (username: string, displayName?: string) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -53,8 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await refreshUser();
   };
 
+  const updateProfile = async (username: string, displayName?: string) => {
+    await api.auth.updateProfile(username, displayName);
+    await refreshUser();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, changePassword, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, changePassword, updateProfile, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

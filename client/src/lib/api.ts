@@ -39,6 +39,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ currentPassword, newPassword }),
       }),
+    updateProfile: (username: string, displayName?: string) =>
+      request('/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ username, displayName }),
+      }),
   },
 
   settings: {

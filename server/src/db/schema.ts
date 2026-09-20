@@ -1,6 +1,7 @@
 export interface User {
   id: string;
   username: string;
+  displayName?: string;
   passwordHash: string;
   passwordSalt: string;
   role: 'admin' | 'user';

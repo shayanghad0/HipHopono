@@ -31,7 +31,7 @@ type Tab = 'model' | 'agent' | 'account';
 
 export default function Settings() {
   const { settings, updateSettings, refreshSettings } = useSettings();
-  const { user, changePassword, logout } = useAuth();
+  const { user, changePassword, updateProfile, logout } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -55,12 +55,23 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  const [newUsername, setNewUsername] = useState('');
+  const [newDisplayName, setNewDisplayName] = useState('');
+  const [profileSaved, setProfileSaved] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; error?: string } | null>(null);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [resetting, setResetting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setNewUsername(user.username);
+      setNewDisplayName(user.displayName || '');
+    }
+  }, [user]);
 
   useEffect(() => {
     if (settings) {
@@ -146,6 +157,19 @@ export default function Settings() {
       addToast('error', message);
     } finally {
       setTesting(false);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!newUsername.trim()) return;
+    try {
+      await updateProfile(newUsername, newDisplayName || undefined);
+      addToast('success', 'Profile updated successfully!');
+      setProfileSaved(true);
+      setTimeout(() => setProfileSaved(false), 2000);
+    } catch (err) {
+      const message = (err as Error).message;
+      addToast('error', message);
     }
   };
 
@@ -567,6 +591,43 @@ export default function Settings() {
                   transition={{ duration: 0.2 }}
                   className="space-y-4"
                 >
+                  {/* Change Profile Card */}
+                  <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="w-4 h-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-text uppercase tracking-wide">Change Profile</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className={labelBase}>Username</label>
+                        <input
+                          type="text"
+                          value={newUsername}
+                          onChange={(e) => setNewUsername(e.target.value)}
+                          className={inputBase}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelBase}>Display Name</label>
+                        <input
+                          type="text"
+                          value={newDisplayName}
+                          onChange={(e) => setNewDisplayName(e.target.value)}
+                          placeholder="Optional"
+                          className={inputBase}
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleUpdateProfile}
+                      className="px-4 py-2 bg-bg-tertiary hover:bg-border text-text rounded-lg transition-all text-sm disabled:opacity-50"
+                    >
+                      {profileSaved ? 'Saved!' : 'Update Profile'}
+                    </button>
+                  </section>
+
                   {/* Change Password Card */}
                   <section className="bg-bg-secondary border border-border rounded-xl p-5 space-y-4">
                     <div className="flex items-center gap-2 mb-1">

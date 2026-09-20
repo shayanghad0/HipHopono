@@ -100,8 +100,16 @@ export default function ProjectPicker() {
       <header className="relative z-10 h-12 border-b border-white/10 bg-black/20 backdrop-blur-xl flex items-center justify-between px-6">
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+            <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" stroke-linecap="round" stroke-linejoin="round" aria-label="HipHopono logo">
+              <g transform="rotate(-45 12 12)">
+                <path d="M5 9h10v6H5z"/>
+                <path d="M14 8h3v8h-3z"/>
+                <path d="M17 12h3.5"/>
+                <path d="M5 12H2"/>
+                <path d="M2 10.5v3"/>
+                <circle cx="21" cy="14" r="0.6"/>
+                <circle cx="22.5" cy="10.5" r="0.6"/>
+              </g>
             </svg>
           </div>
           <span className="text-white font-semibold text-sm tracking-tight">HipHopono</span>

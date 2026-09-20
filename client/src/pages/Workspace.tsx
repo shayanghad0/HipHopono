@@ -151,6 +151,17 @@ export default function Workspace() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: 0.05 }}
           >
+            <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-label="HipHopono logo">
+              <g transform="rotate(-45 12 12)">
+                <path d="M5 9h10v6H5z"/>
+                <path d="M14 8h3v8h-3z"/>
+                <path d="M17 12h3.5"/>
+                <path d="M5 12H2"/>
+                <path d="M2 10.5v3"/>
+                <circle cx="21" cy="14" r="0.6"/>
+                <circle cx="22.5" cy="10.5" r="0.6"/>
+              </g>
+            </svg>
             <span className="text-text-bright font-bold text-sm">HipHopono</span>
             {project && (
               <div className="relative">

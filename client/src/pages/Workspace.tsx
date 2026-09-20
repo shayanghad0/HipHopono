@@ -24,6 +24,7 @@ export default function Workspace() {
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [branches, setBranches] = useState<{ branches: string[]; current: string }>({ branches: [], current: '' });
   const [showBranchMenu, setShowBranchMenu] = useState(false);
+  const [branchSwitchError, setBranchSwitchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!project) {
@@ -67,12 +68,15 @@ export default function Workspace() {
 
   const handleSwitchBranch = async (branch: string) => {
     if (!project) return;
+    setBranchSwitchError(null);
     try {
       const data = await api.fs.gitCheckout(project.id, branch);
       setBranches(prev => ({ ...prev, current: data.branch }));
+      // Update the project-level gitBranch so the header badge reflects the new branch
+      setProject({ ...project, gitBranch: data.branch });
       setShowBranchMenu(false);
-    } catch {
-      // Ignore
+    } catch (err) {
+      setBranchSwitchError((err as Error).message || 'Failed to switch branch');
     }
   };
 
@@ -168,6 +172,9 @@ export default function Workspace() {
                     <div className="fixed inset-0 z-10" onClick={() => setShowBranchMenu(false)} />
                     <div className="absolute top-full left-0 mt-1 w-48 bg-bg-secondary border border-border rounded-lg shadow-xl z-20 max-h-60 overflow-y-auto">
                       <div className="p-1.5 text-xs text-text-muted font-medium border-b border-border">Branches</div>
+                      {branchSwitchError && (
+                        <div className="px-3 py-1.5 text-xs text-danger border-b border-border">{branchSwitchError}</div>
+                      )}
                       {branches.branches.map(branch => (
                         <button
                           key={branch}

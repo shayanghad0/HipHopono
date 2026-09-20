@@ -107,7 +107,12 @@ export default function ProjectPicker() {
           <span className="text-white font-semibold text-sm tracking-tight">HipHopono</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-white/40 text-xs font-mono mr-1">{user?.username}</span>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xs font-bold shrink-0">
+              {(user?.displayName || user?.username)?.[0]?.toUpperCase()}
+            </div>
+            <span className="text-white/40 text-xs font-mono">{user?.displayName || user?.username}</span>
+          </div>
           <button onClick={() => navigate('/setting')} className={headerBtn}>Settings</button>
           <button onClick={() => logout().then(() => navigate('/login'))} className="text-red-400/70 hover:text-red-400 text-xs font-medium px-3 py-1.5 rounded-md hover:bg-red-500/10 transition-all">Logout</button>
         </div>

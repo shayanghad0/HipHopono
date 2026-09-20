@@ -207,7 +207,12 @@ export default function Workspace() {
               { id: 2, type: "message", message: "Welcome to HipHopono", timestamp: "1m ago" },
             ]}
           />
-          <span className="text-text-muted text-xs">{user?.username}</span>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-xs font-bold shrink-0">
+              {(user?.displayName || user?.username)?.[0]?.toUpperCase()}
+            </div>
+            <span className="text-text-muted text-xs">{user?.displayName || user?.username}</span>
+          </div>
           <motion.button
             onClick={() => navigate('/setting')}
             className="text-text-muted hover:text-text text-xs"

@@ -1,4 +1,4 @@
-# AI Web CLI
+# HipHopono
 
 > A self-hosted, browser-based AI coding agent — like Claude Code, OpenCode CLI, Codex CLI, Zed AI, or Cursor Agent, but running entirely from your browser against your own machine.
 

@@ -26,6 +26,7 @@ import {
   LogOut,
   RotateCcw,
 } from 'lucide-react';
+import Footer from '../components/Footer.tsx';
 
 type Tab = 'model' | 'agent' | 'account';
 
@@ -222,7 +223,7 @@ export default function Settings() {
 
   return (
     <motion.div
-      className="relative min-h-screen"
+      className="relative flex flex-col min-h-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
@@ -748,6 +749,7 @@ export default function Settings() {
           </div>
         </div>
       </div>
+      <Footer />
     </motion.div>
   );
 }

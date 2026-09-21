@@ -6,6 +6,7 @@ import { useProject } from '../context/ProjectContext.tsx';
 import { api } from '../lib/api.ts';
 import { FileExplorer } from '../components/FileExplorer.tsx';
 import { BackgroundPaths } from '../components/ui/background-paths.tsx';
+import Footer from '../components/Footer.tsx';
 
 interface Project {
   id: string;
@@ -93,7 +94,7 @@ export default function ProjectPicker() {
   const headerBtn = "px-3 py-1.5 text-text-muted hover:text-text text-xs font-medium rounded-md hover:bg-white/5 transition-all";
 
   return (
-    <div className="relative min-h-screen bg-[#0d1117] overflow-hidden">
+    <div className="relative flex flex-col min-h-screen bg-[#0d1117]">
       <BackgroundPaths />
 
       {/* ── Top bar ── */}
@@ -127,7 +128,7 @@ export default function ProjectPicker() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="relative z-10 flex items-start justify-center px-6 pt-16 pb-20">
+      <main className="relative z-10 flex-1 flex items-start justify-center px-6 pt-16 pb-20">
         <motion.div
           className="w-full max-w-2xl"
           initial={{ opacity: 0, scale: 0.97 }}
@@ -308,6 +309,7 @@ export default function ProjectPicker() {
       </main>
 
       <FileExplorer isOpen={fileExplorerOpen} onClose={() => setFileExplorerOpen(false)} onSelect={openProject} />
+      <Footer />
     </div>
   );
 }

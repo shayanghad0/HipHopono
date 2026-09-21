@@ -1,0 +1,3 @@
+make a footer on this footer say the copy write is for mehersazpars and add a 2 logo github and nararouter (client/public/NaraRouter.svg)                                                                           
+github : https://github.com/shayanghad0/hiphopono                                                                                                                                                                   
+naratouter : https://router.bynara.id/register?ref=SPB525NM                                                                     

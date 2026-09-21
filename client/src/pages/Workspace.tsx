@@ -8,6 +8,7 @@ import Sidebar from '../components/Sidebar.tsx';
 import ChatPanel from '../components/ChatPanel.tsx';
 import FileTree from '../components/FileTree.tsx';
 import FileEditor from '../components/FileEditor.tsx';
+import Footer from '../components/Footer.tsx';
 
 export default function Workspace() {
   const { project, setProject } = useProject();
@@ -340,6 +341,8 @@ export default function Workspace() {
           )}
         </AnimatePresence>
       </motion.div>
+
+      <Footer />
     </motion.div>
   );
 }

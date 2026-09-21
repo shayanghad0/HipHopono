@@ -312,7 +312,7 @@ export default function Workspace() {
             </motion.div>
           ) : (
             <motion.div
-              className="h-full flex items-center justify-center"
+              className="flex-1 overflow-hidden flex items-center justify-center"
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

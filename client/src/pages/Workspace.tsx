@@ -342,7 +342,7 @@ export default function Workspace() {
         </AnimatePresence>
       </motion.div>
 
-      <Footer />
+      <Footer hasBackground />
     </motion.div>
   );
 }
